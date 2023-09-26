@@ -1,0 +1,87 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+
+// 후보자 클래스, 스도쿠 보드의 빈 칸에 대한 정보를 담고 있음
+class Candidate {
+    int r,c,gridNum;
+    public Candidate(int r, int c, int gridNum) {
+        this.r = r;
+        this.c = c;
+        this.gridNum = gridNum;
+    }
+}
+
+public class Main_2239_김혜인 {
+    private static final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    private int[][] chk = new int[3][9]; // 각 행, 열, 그리고 3x3 그리드에서 사용된 숫자 추적
+    private int[][] answer = new int[9][9]; // 스도쿠의 답 저장
+    private ArrayList<Candidate> candidate = new ArrayList<>(); // 빈 칸의 위치와 그 위치가 어느 3x3 그리드에 있는지 저장
+
+    // 사용자 입력 초기화
+    private void initUserInput() throws Exception {
+        for (int i = 0; i < 9; i++) {
+            String line = br.readLine();
+            for (int j = 0; j < 9; j++) {
+                int cur = line.charAt(j)-'0';
+                int gridNum = i/3*3+j/3;
+                // 빈 칸이면 후보 리스트에 추가
+                if (cur == 0) {
+                    candidate.add(new Candidate(i,j,gridNum));
+                    continue;
+                }
+                // 빈 칸이 아니면 답과 chk 배열
+                answer[i][j] = cur;
+                chk[0][i]|=1<<cur;
+                chk[1][j]|=1<<cur;
+                chk[2][gridNum]|=1<<cur;
+            }
+        }
+    }
+
+    private void printAnswer() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                sb.append(answer[i][j]);
+            }
+            sb.append('\n');
+        }
+        System.out.print(sb);
+    }
+
+    // 빈 칸을 채우는 재귀 함수
+    private boolean search(int idx) {
+        // 모든 빈 칸을 채웠다면 true 반환
+        if (idx == candidate.size()) {
+            return true;
+        }
+        Candidate cur = candidate.get(idx);
+        for (int num = 1; num <= 9; num++) {
+            // num이 이미 사용되었다면 continue
+            if ( (chk[0][cur.r]&1<<num)!=0 || (chk[1][cur.c]&1<<num)!=0 || (chk[2][cur.gridNum]&1<<num)!=0 )
+                continue;
+            // num을 사용하고 다음 빈 칸을 채우러 감
+            chk[0][cur.r]|=1<<num;
+            chk[1][cur.c]|=1<<num;
+            chk[2][cur.gridNum]|=1<<num;
+            answer[cur.r][cur.c] = num;
+            if (search(idx+1)) return true;
+            // 백트래킹
+            chk[0][cur.r]&=~(1<<num);
+            chk[1][cur.c]&=~(1<<num);
+            chk[2][cur.gridNum]&=~(1<<num);
+        }
+        return false;
+    }
+
+    private void solution() throws Exception {
+        initUserInput(); // 입력 받음
+        search(0); // 빈 칸 채우기 시작
+        printAnswer(); 
+    }
+
+    public static void main(String[] args) throws Exception {
+        new Main().solution();
+    }
+}
